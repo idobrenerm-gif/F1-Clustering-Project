@@ -1,5 +1,7 @@
 import requests
 import pandas as pd
+import matplotlib.pyplot as plt
+
 
 #define the api
 url = "https://api.openf1.org/v1/sessions?year=2024&session_name=Race"
@@ -57,20 +59,19 @@ print(df_telemetry[['date', 'speed', 'brake', 'throttle', 'rpm', 'n_gear']].head
 
 
 
-# 1. הגדרות (נשתמש במרוץ סילברסטון ובהמילטון לדוגמה)
+# define the target session and driver
 target_session = 9558
 target_driver = 44
 
-# 2. משיכת הטלמטריה (מסננים מהירויות נמוכות מאוד כבר בשלב הבקשה)
+# Downloading telemetry data with a filter for speed > 50 to reduce noise from pit lane
 telemetry_url = f"https://api.openf1.org/v1/car_data?session_key={target_session}&driver_number={target_driver}&speed>50"
 telemetry_response = requests.get(telemetry_url)
 df_telemetry = pd.DataFrame(telemetry_response.json())
 
-# 3. זיהוי "פוטנציאל לפנייה"
-# אנחנו מחפשים רגעים שבהם יש בלימה חזקה
+# looking for potential corners based on strong braking events
 potential_corners = df_telemetry[df_telemetry['brake'] > 80]
 
-# נדפיס את 20 השורות הראשונות של רגעי בלימה חזקה
+#printing the potential corner entries to analyze them further
 print("--- Potential Corner Entries (Strong Braking) ---")
 print(potential_corners[['date', 'speed', 'brake', 'n_gear']].head(20))
 
@@ -78,64 +79,57 @@ print(potential_corners[['date', 'speed', 'brake', 'n_gear']].head(20))
 
 
 
-
-
-import pandas as pd
-import requests
-
 def extract_corners(df_telemetry):
     """
-    אלגוריתם שעובר על נתוני טלמטריה ומזהה אירועי פניות.
-    מחזיר טבלה שבה כל שורה היא פנייה אחת נקייה.
+   algorithm to extract corners based on braking and speed drop patterns in the telemetry data.
     """
     corners = []
     in_corner = False
     corner_data = {}
 
-    # מעבר על כל שורה בנתונים
+    # passing through the telemetry data row by row to identify corners
     for index, row in df_telemetry.iterrows():
         
-        # 1. זיהוי תחילת כניסה לפנייה (בלימה חזקה)
+        # detecting the start of a corner: strong braking event
         if row['brake'] > 80 and not in_corner:
             in_corner = True
             corner_data = {
-                'entry_speed': row['speed'],      # מהירות בתחילת הבלימה
-                'apex_speed': row['speed'],       # יתעדכן למהירות המינימלית בהמשך
-                'min_gear': row['n_gear'],        # ההילוך הנמוך ביותר בפנייה
+                'entry_speed': row['speed'],      # Speed at the moment of heavy braking (potential corner entry)
+                'apex_speed': row['speed'],       # initially set to entry speed, will be updated to the lowest speed during the corner
+                'min_gear': row['n_gear'],        # initially set to the gear at entry, will be updated if the driver shifts down during the corner
                 'start_time': row['date']
             }
 
-        # 2. הנהג בתוך הפנייה - מחפשים את ה-Apex (המהירות הכי נמוכה)
+        # tracking the corner: while the driver is still braking, we check for the lowest speed (apex) and the lowest gear used
         elif in_corner and row['brake'] > 0:
             if row['speed'] < corner_data['apex_speed']:
                 corner_data['apex_speed'] = row['speed']
             if row['n_gear'] < corner_data['min_gear']:
                 corner_data['min_gear'] = row['n_gear']
 
-        # 3. סיום אירוע הבלימה והערכת התוצאה
+        # detecting the end of a corner: when braking stops, we check if the speed drop is significant enough to be considered a valid corner
         elif in_corner and row['brake'] == 0:
             speed_drop = corner_data['entry_speed'] - corner_data['apex_speed']
             
-            # בדיקת אימות: פנייה אמיתית דורשת ירידת מהירות של לפחות 40 קמ"ש
-            # זה מנקה לנו "רעשים" ונגיעות קטנות בבלם[cite: 1]
+            # considering it a valid corner only if the speed drop is greater than 40 km/h (this threshold can be adjusted based on further analysis)
             if speed_drop > 40:
                 corner_data['speed_drop'] = speed_drop
                 corners.append(corner_data)
             
-            # איפוס המשתנים לקראת הפנייה הבאה
+            # resetting the corner detection state
             in_corner = False
             corner_data = {}
 
-    # המרת רשימת הפניות לטבלה מסודרת
+    # returning the detected corners as a DataFrame
     return pd.DataFrame(corners)
 
 
 # ==========================================
-# הפעלת האלגוריתם
+# algorithm execution
 # ==========================================
 
 print("1. Downloading telemetry data...")
-# מושכים נתונים עם פילטר התחלתי למהירות > 50 כדי למנוע רעש של הפיטס[cite: 1]
+# creating the url for telemetry data with a filter for speed > 50 to focus on relevant data and reduce noise
 url = "https://api.openf1.org/v1/car_data?session_key=9558&driver_number=44&speed>50"
 response = requests.get(url)
 df_raw = pd.DataFrame(response.json())
@@ -153,9 +147,7 @@ print(df_corners[['start_time', 'entry_speed', 'apex_speed', 'speed_drop', 'min_
 
 
 
-import matplotlib.pyplot as plt
-
-# 1. פונקציית זיהוי הפניות (בדיוק כמו מקודם)
+# defining the target session and driver for location data
 def extract_corners(df_telemetry):
     corners = []
     in_corner = False
@@ -183,7 +175,7 @@ def extract_corners(df_telemetry):
     return pd.DataFrame(corners)
 
 # ==========================================
-# הרצת הנתונים והגרפיקה
+# execution
 # ==========================================
 session_key = 9558
 driver_number = 44
@@ -200,31 +192,31 @@ loc_url = f"https://api.openf1.org/v1/location?session_key={session_key}&driver_
 df_loc = pd.DataFrame(requests.get(loc_url).json())
 
 print("4. Merging and Drawing the Track...")
-# המרת הזמנים לפורמט של תאריך כדי שפייתון יוכל להשוות ביניהם במדויק
+# converting date columns to datetime for accurate merging
 df_loc['date'] = pd.to_datetime(df_loc['date'])
 df_corners['start_time'] = pd.to_datetime(df_corners['start_time'])
 
-# סידור לפי זמן (חובה לפני מיזוג)
+# sorting both DataFrames by their respective time columns to prepare for the asof merge
 df_loc = df_loc.sort_values('date')
 df_corners = df_corners.sort_values('start_time')
 
-# פעולת מיזוג חכמה: מחפשת לכל פנייה את ה-X וה-Y שהכי קרובים אליה בזמן
+# merging the corners with the location data based on the nearest timestamp to get the corresponding X, Y coordinates for each detected corner
 corners_with_location = pd.merge_asof(df_corners, df_loc, left_on='start_time', right_on='date', direction='nearest')
 
-# יצירת הגרף (ציור המסלול והפניות)
+# plotting the track layout and the detected corners
 plt.figure(figsize=(10, 6))
 
-# ציור מסלול המרוץ כולו (באפור)
+#plotting the track layout in light gray
 plt.plot(df_loc['x'], df_loc['y'], label='Silverstone Track', color='lightgray', linewidth=2)
 
-# ציור הנקודות האדומות איפה שהאלגוריתם זיהה פניות
+# plotting the detected corners as red points on top of the track layout
 plt.scatter(corners_with_location['x'], corners_with_location['y'], color='red', s=50, label='Detected Corners', zorder=5)
 
 plt.title('F1 Corner Detection Validation - Silverstone (Lewis Hamilton)')
 plt.xlabel('X Coordinate')
 plt.ylabel('Y Coordinate')
 plt.legend()
-plt.axis('equal') # שומר על פרופורציות אמיתיות של המסלול
+plt.axis('equal') # keeping the aspect ratio of the plot equal to accurately represent the track layout
 
-# הצגת הגרף על המסך
+# displaying the plot
 plt.show()
