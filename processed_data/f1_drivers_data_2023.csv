@@ -1,0 +1,22 @@
+﻿driver_number,name,team,age_in_2023,years_of_experience,years_in_current_team,country,marital_status,has_kids,world_championships,height_cm,weight_kg,driver_status,contract_years_remaining
+1,Max Verstappen,Red Bull Racing,26,9,8,Netherlands,in a relationship,False,2,181,72,1,5
+11,Sergio Perez,Red Bull Racing,33,13,3,Mexico,Married,True,0,173,63,2,2
+44,Lewis Hamilton,Mercedes,38,17,11,United Kingdom,Single,False,7,174,73,1,0
+63,George Russell,Mercedes,25,5,2,United Kingdom,In a Relationship,False,0,185,70,2,2
+16,Charles Leclerc,Ferrari,26,6,5,Monaco,In a Relationship,False,0,180,69,1,1
+55,Carlos Sainz,Ferrari,29,9,3,Spain,In a Relationship,False,0,178,66,2,1
+4,Lando Norris,McLaren,24,5,5,United Kingdom,Single,False,0,170,68,1,2
+81,Oscar Piastri,McLaren,22,1,1,Australia,In a Relationship,False,0,178,68,2,3
+14,Fernando Alonso,Aston Martin,42,20,1,Spain,In a Relationship,False,2,171,68,1,1
+18,Lance Stroll,Aston Martin,25,7,5,Canada,In a Relationship,False,0,182,70,2,3
+10,Pierre Gasly,Alpine,27,7,1,France,In a Relationship,False,0,177,70,2,1
+31,Esteban Ocon,Alpine,27,7,4,France,In a Relationship,False,0,186,66,1,1
+23,Alex Albon,Williams,27,4,2,Thailand,In a Relationship,False,0,186,73,1,1
+2,Logan Sargeant,Williams,23,1,1,United States,Single,False,0,181,71,2,0
+22,Yuki Tsunoda,AlphaTauri,23,3,3,Japan,Single,False,0,159,54,1,0
+77,Valtteri Bottas,Alfa Romeo,34,11,2,Finland,In a Relationship,False,0,173,69,1,1
+24,Zhou Guanyu,Alfa Romeo,24,2,2,China,Single,False,0,175,63,2,0
+20,Kevin Magnussen,Haas,31,9,6,Denmark,Married,True,0,174,68,1,0
+27,Nico Hulkenberg,Haas,36,12,1,Germany,Married,True,0,184,78,2,0
+3,Daniel Ricciardo,AlphaTauri,34,13,1,Australia,In a Relationship,False,0,180,66,2,0
+40,Liam Lawson,AlphaTauri,21,1,1,New Zealand,In a Relationship,False,0,174,68,2,0
