@@ -10,9 +10,9 @@ def process_golden_laps(tracks):
         print(f"Processing data for {track_name}...")
         
         # Define file paths
-        laps_file = f"raw_data/{track_name}_raw_laps.csv"
-        tel_file = f"raw_data/{track_name}_raw_telemetry.csv"
-        loc_file = f"raw_data/{track_name}_raw_location.csv"
+        laps_file = f"raw_data_2/{track_name}_raw_laps.csv"
+        tel_file = f"raw_data_2/{track_name}_raw_telemetry.csv"
+        loc_file = f"raw_data_2/{track_name}_raw_location.csv"
 
         print(f"  Loading files for {track_name}...")
         # Load CSV files into DataFrames
@@ -90,7 +90,7 @@ def process_golden_laps(tracks):
     final_dataset = final_dataset[cols_order]
     
     # Save the final dataset to a CSV file
-    output_path = "processed_data/golden_laps_ready.csv"
+    output_path = "processed_data/golden_laps_final.csv"
     final_dataset.to_csv(output_path, index=False)
     print(f"\nSuccess! Processed data saved to {output_path} with {len(final_dataset)} rows.")
     return final_dataset
