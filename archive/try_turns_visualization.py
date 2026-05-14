@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from api_client import OpenF1Client
+from archive.access_to_api import OpenF1Client
 
 def plot_racing_lines_robust():
     print("Loading corner data...")
