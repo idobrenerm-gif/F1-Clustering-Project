@@ -251,7 +251,7 @@ def plot_corners_by_geometry(track_name, file_path='processed_data/golden_laps_f
     smoothed_change = pd.Series(angle_change).rolling(window=window_size, center=True, min_periods=1).mean().values
     
     # 6. Define the sensitivity threshold for what counts as a "Corner"
-    corner_threshold = 0.08
+    corner_threshold = 0.06
 
     # Boolean array: True if it's a corner, False if it's a straight
     is_corner = smoothed_change > corner_threshold
@@ -288,10 +288,10 @@ def plot_corners_by_geometry(track_name, file_path='processed_data/golden_laps_f
     plt.show()
 
 # Run the algorithm and plot the corners for each track - need to adjust the threshold for each track to get the best results
-#plot_corners_by_geometry('Monza') # - 0.06 ,5
+#plot_corners_by_geometry('Monza') # - 0.06 ,5 ok
 #plot_corners_by_geometry('Singapore') # - 0.06 ,5 , has problem with starting point!
-#plot_corners_by_geometry('Spa')  #- 0.04 ,5
-#plot_corners_by_geometry('Suzuka') # - 0.08 ,5
+#plot_corners_by_geometry('Spa')  #- 0.06 ,5
+#plot_corners_by_geometry('Suzuka') # - 0.08 ,5 - maybe 0.06
 
 #--------------------------------------------------------------------------------------------
 
@@ -382,6 +382,7 @@ def plot_gear_shifts(track_name, file_path='processed_data/golden_laps_final.csv
     ax.legend(handles=legend_elements, loc='lower right', 
               fontsize=12, facecolor='white', edgecolor='lightgray', 
               labelcolor='black', title='Gears', title_fontsize=14, framealpha=0.85)
+    
     start_x, start_y = x[0], y[0]
     ax.plot(start_x, start_y, marker='*', markersize=7, 
             color='black', markeredgecolor='black', markeredgewidth=0.5, zorder=10)
@@ -396,9 +397,10 @@ def plot_gear_shifts(track_name, file_path='processed_data/golden_laps_final.csv
 
 #--------------------------------------------------------------------------------------------
 
+
 def plot_throttle_zones(track_name, file_path='processed_data/golden_laps_final.csv'):
     
-    # 1. Load data safely
+    # 1. Load and clean data (same as before)
     absolute_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         print(f"[!] Error: File not found at {absolute_path}")
@@ -411,20 +413,18 @@ def plot_throttle_zones(track_name, file_path='processed_data/golden_laps_final.
         print(f"[!] No data found for track: {track_name}")
         return
 
-    # 2. Extract single lap for the first driver
     first_driver = track_data['driver_number'].iloc[0]
     single_lap = track_data[track_data['driver_number'] == first_driver].copy()
 
-    # 3. Clean numeric data (x, y, and brake)
     single_lap['x'] = pd.to_numeric(single_lap['x'], errors='coerce')
     single_lap['y'] = pd.to_numeric(single_lap['y'], errors='coerce')
     single_lap['throttle'] = pd.to_numeric(single_lap['throttle'], errors='coerce')
     single_lap = single_lap.dropna(subset=['x', 'y', 'throttle'])
 
-    # 4. Close the track loop (connect last point to first point)
+    # Close the loop
     single_lap = pd.concat([single_lap, single_lap.iloc[[0]]], ignore_index=True)
 
-    # 5. Apply track rotation (same as before)
+    # 2. Track Rotation Logic (proven and correct)
     if track_name in ['Monza', 'Spa']:
         temp_x = single_lap['x'].copy()
         single_lap['x'] = -single_lap['y']
@@ -437,9 +437,9 @@ def plot_throttle_zones(track_name, file_path='processed_data/golden_laps_final.
         single_lap['x'] = temp_x * c - temp_y * s
         single_lap['y'] = temp_x * s + temp_y * c
 
-    print(f"Creating Braking Zones Map for {track_name} (Driver {first_driver})...")
+    print(f"Creating Continuous Throttle Map for {track_name} (Driver {first_driver})...")
 
-    # 6. Prepare points for continuous line segments
+    # 3. Prepare data for LineCollection (continuous segments)
     x = single_lap['x'].values
     y = single_lap['y'].values
     throttle = single_lap['throttle'].values
@@ -447,41 +447,50 @@ def plot_throttle_zones(track_name, file_path='processed_data/golden_laps_final.
     points = np.array([x, y]).T.reshape(-1, 1, 2)
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-    # 7. Define segment colors: Lime if throttle (>0), Light  Gray if coasting/accelerating
-    segment_colors = ['lime' if t > 0 else 'lightgray' for t in throttle[:-1]]
-
-    # 8. Create the plot
+    # 4. Create the plot with professional styling
     fig, ax = plt.subplots(figsize=(16, 12))
     
-    # Build the LineCollection with the custom colors
-    lc = LineCollection(segments, colors=segment_colors, linewidths=8, capstyle='round')
-    ax.add_collection(lc)
+    # Use 'plasma' cmap for smooth, pleasing color transitions from 0 to 100
+    norm = plt.Normalize(0, 100)
+    lc = LineCollection(segments, cmap='plasma', norm=norm)
+    lc.set_array(throttle)
+    lc.set_linewidth(10) # Thick, bold line
+    lc.set_capstyle('round') # Smooth edges
+    lc.set_zorder(5) # Draw above grid, below start marker
+
+    line = ax.add_collection(lc)
     
-    # 9. Style the chart
-    ax.set_title(f"F1 Telemetry: {track_name} Throttle Zones", fontsize=18, fontweight='bold')
-    ax.set_xlabel("X Position (meters)")
-    ax.set_ylabel("Y Position (meters)")
+    # --- Professional Light Theme Setup ---
+    # Pure white background for maximum cleanliness
+    bg_color = 'white'
+    ax.set_facecolor(bg_color)
+    fig.patch.set_facecolor(bg_color)
+    
+    # Add Colorbar (Scale)
+    cbar = fig.colorbar(line, ax=ax)
+    cbar.set_label('Throttle Application (%)', fontsize=14, fontweight='bold', color='#333333')
+    cbar.ax.tick_params(labelcolor='#333333')
+    
+    # Titles and Labels
+    ax.set_title(f"F1 Telemetry: {track_name} Throttle Profile", fontsize=20, fontweight='bold', color='#111111')
+    ax.set_xlabel("X Position (meters)", color='#333333')
+    ax.set_ylabel("Y Position (meters)", color='#333333')
 
     ax.axis('equal') 
-    ax.grid(True, linestyle='--', alpha=0.3)
+    ax.tick_params(colors='#333333')
+    ax.grid(True, linestyle='-', alpha=0.15, color='gray') # Subtle grid
     
-    # Set limits for LineCollection
+    # Limits and Margins
     margin = 500
     ax.set_xlim(x.min() - margin, x.max() + margin)
     ax.set_ylim(y.min() - margin, y.max() + margin)
 
-    # 10. Add a custom legend
-    custom_legend = [
-        Line2D([0], [0], color='lime', lw=6, label='Throttle (Throttle > 0)'),
-        Line2D([0], [0], color='lightgray', lw=6, label='No Throttle / Coasting'),
-        Line2D([0], [0], color='black', lw=6, label='Starting Point', marker='*', markersize=20, markeredgewidth=0.5)
-    ]
-    ax.legend(handles=custom_legend, loc='upper right', fontsize=12)
-
     start_x, start_y = x[0], y[0]
     ax.plot(start_x, start_y, marker='*', markersize=7, 
             color='black', markeredgecolor='black', markeredgewidth=0.5, zorder=10)
-
+    
+    # Final layout cleanup to prevent clipping
+    plt.tight_layout(pad=2.5)
     plt.show()
 
 # Run the function
