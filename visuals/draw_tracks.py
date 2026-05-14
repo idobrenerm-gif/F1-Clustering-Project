@@ -74,5 +74,5 @@ def plot_f1_track(track_name, file_path='processed_data/golden_laps_final.csv'):
 # print the track layout for each track
 #plot_f1_track('Monza')
 #plot_f1_track('Singapore')
-#plot_f1_track('Spa')
+plot_f1_track('Spa')
 #plot_f1_track('Suzuka')
