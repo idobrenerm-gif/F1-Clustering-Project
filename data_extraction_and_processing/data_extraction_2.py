@@ -8,7 +8,7 @@ def download_full_track_data_smart():
     os.makedirs(base_dir, exist_ok=True)
 
     track_keys = {
-        'Monza': {'meeting_key': 1218, 'session_key': 9153},
+        'Monza': {'meeting_key': 1218, 'session_key': 9153}, #meeting_key = which grand prix, session_key = which event (practice, qualifying, race)
         'Spa': {'meeting_key': 1216, 'session_key': 9135},
         'Singapore': {'meeting_key': 1219, 'session_key': 9161},
         'Suzuka': {'meeting_key': 1220, 'session_key': 9169}

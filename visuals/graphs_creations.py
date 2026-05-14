@@ -4,7 +4,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 import numpy as np
 import os
-# need fixing to cornor plot and add in legend
+# need fixing to corner plot and add in legend
 
 # Function to plot the F1 track layout by speed for a given track name, works similar to the previous function but with a continuous color gradient based on speed
 def plot_speed_map_continuous(track_name, file_path='processed_data/golden_laps_final.csv'):
@@ -389,7 +389,6 @@ def plot_gear_shifts(track_name, file_path='processed_data/golden_laps_final.csv
     plt.tight_layout(pad=3.0)
     plt.show()
 
-# הפעלת הפונקציה
 #plot_gear_shifts('Monza')
 #plot_gear_shifts('Singapore')
 #plot_gear_shifts('Spa')
