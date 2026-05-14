@@ -290,7 +290,7 @@ def plot_corners_by_geometry(track_name, file_path='processed_data/golden_laps_f
 # Run the algorithm and plot the corners for each track - need to adjust the threshold for each track to get the best results
 #plot_corners_by_geometry('Monza') # - 0.06 ,5
 #plot_corners_by_geometry('Singapore') # - 0.06 ,5 , has problem with starting point!
-#plot_corners_by_geometry('Spa')  #- 0.04 ,5
+#plot_corners_by_geometry('Spa')  #- 0.06 ,5
 #plot_corners_by_geometry('Suzuka') # - 0.08 ,5
 
 #--------------------------------------------------------------------------------------------
