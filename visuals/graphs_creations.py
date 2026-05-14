@@ -204,7 +204,7 @@ def plot_corners_by_geometry(track_name, file_path='processed_data/golden_laps_f
         print(f"[!] No data found for track: {track_name}")
         return
 
-    first_driver = track_data['driver_number'].iloc[0]
+    first_driver = track_data['driver_number'].iloc[1]
     single_lap = track_data[track_data['driver_number'] == first_driver].copy()
 
     single_lap['x'] = pd.to_numeric(single_lap['x'], errors='coerce')
@@ -289,7 +289,7 @@ def plot_corners_by_geometry(track_name, file_path='processed_data/golden_laps_f
 
 # Run the algorithm and plot the corners for each track - need to adjust the threshold for each track to get the best results
 #plot_corners_by_geometry('Monza') # - 0.06 ,5 ok
-#plot_corners_by_geometry('Singapore') # - 0.06 ,5 , has problem with starting point!
+plot_corners_by_geometry('Singapore') # - 0.06 ,5 , has problem with starting point!
 #plot_corners_by_geometry('Spa')  #- 0.06 ,5
 #plot_corners_by_geometry('Suzuka') # - 0.08 ,5 - maybe 0.06
 
