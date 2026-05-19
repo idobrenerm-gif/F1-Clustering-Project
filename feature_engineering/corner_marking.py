@@ -7,74 +7,69 @@ import os
 
 # has problem with the start/finish line in suzuka - need fixing! 
 
-def add_is_corner_column(file_path='processed_data/golden_laps_final.csv', output_path='processed_data/golden_laps_final.csv'):
+import pandas as pd
+import numpy as np
+import os
+
+def add_is_corner_column_geofenced(file_path='processed_data/golden_laps_final.csv', output_path='processed_data/golden_laps_final.csv'):
     
     if not os.path.exists(file_path):
         print(f"[!] Error: File not found at {file_path}")
         return None
 
-    # טעינת הנתונים
     df = pd.read_csv(file_path)
-    
-    # ניצור רשימה ריקה לאחסון התוצאות לכל מסלול בנפרד
     processed_frames = []
 
-    # אנחנו מעבדים כל מסלול בנפרד כדי ששינויי הזווית לא "יקפצו" במעבר בין מסלולים
     for track in df['Track'].unique():
         track_df = df[df['Track'] == track].copy()
         
-        # המרה למספרים וניקוי
         track_df['x'] = pd.to_numeric(track_df['x'], errors='coerce')
         track_df['y'] = pd.to_numeric(track_df['y'], errors='coerce')
         track_df = track_df.dropna(subset=['x', 'y'])
 
-        # חישוב וקטור הכיוון (dx, dy)
+        # Calculate geometric features
         dx = np.gradient(track_df['x'])
         dy = np.gradient(track_df['y'])
-        
-        # חישוב זווית הכיוון (Heading Angle)
         heading_angle = np.arctan2(dy, dx)
-        
-        # מניעת קפיצות חדות בחישוב הזווית (Unwrap)
         unwrapped_angle = np.unwrap(heading_angle)
-        
-        # חישוב קצב שינוי הזווית (הנגזרת הראשונה)
         angle_change = np.abs(np.gradient(unwrapped_angle))
         
-        # החלקה של הנתונים כדי למנוע רעשי חיישן (Rolling Mean)
-        # השתמשנו בחלון של 30 כפי שמצאנו שמתאים ללכידת קורבה גרנדה
         window_size = 5
         smoothed_change = pd.Series(angle_change).rolling(window=window_size, center=True, min_periods=1).mean().values
-        
-        # קביעת הסף לזיהוי פנייה
-        corner_threshold = 0.06
         if track == 'Suzuka':
-            corner_threshold = 0.08  # סף מעט נמוך יותר לסוזוקה בגלל פניות חדות יותר
+            corner_threshold = 0.08
+        else:
+            corner_threshold = 0.06
         
-        # יצירת העמודה החדשה
-        # יצירת העמודה החדשה
-        track_df['is_corner'] = smoothed_change > corner_threshold
+        is_corner_raw = smoothed_change > corner_threshold
+
+        # --- GEOFENCING FIX FOR START/FINISH LINE ---
+        # 1. Identify the starting coordinates
+        start_x = track_df['x'].iloc[0]
+        start_y = track_df['y'].iloc[0]
+
+        # 2. Calculate the distance of every point from the start line
+        distances_to_start = np.sqrt((track_df['x'] - start_x)**2 + (track_df['y'] - start_y)**2)
+
+        # 3. Define an exclusion radius (e.g., 200 meters around the start line)
+        # Any point within this radius will be forced to False (straight line)
+        exclusion_radius = 1000
         
-        # --- FIX FOR FALSE CORNER AT START/FINISH LINE ---
-        # נניח ש-10 הדגימות הראשונות והאחרונות הן תמיד בישורת הזינוק
-        # (זה מכסה את אזור ה"תפר" המלאכותי שיצרנו)
-        track_df.iloc[:10, track_df.columns.get_loc('is_corner')] = False
-        track_df.iloc[-10:, track_df.columns.get_loc('is_corner')] = False
-        # -------------------------------------------------
-        
+        # 4. Apply the exclusion
+        is_corner_raw = is_corner_raw & (distances_to_start > exclusion_radius)
+        # --------------------------------------------
+
+        track_df['is_corner'] = is_corner_raw
         processed_frames.append(track_df)
 
-    # איחוד כל המסלולים חזרה ל-Dataframe אחד
     final_df = pd.concat(processed_frames, ignore_index=True)
-    
-    # שמירה לקובץ חדש
     final_df.to_csv(output_path, index=False)
-    print(f"[SUCCESS] Added 'is_corner' column. Saved to: {output_path}")
+    print(f"[SUCCESS] Added 'is_corner' column using geofencing. Saved to: {output_path}")
     
     return final_df
 
 # הרצת הפונקציה
-#updated_df = add_is_corner_column()
+#updated_df = add_is_corner_column_geofenced()
 
 
 
