@@ -1,7 +1,54 @@
 import pandas as pd
 import numpy as np
-from sklearn.cluster import DBSCAN
 import os
+
+try:
+    from sklearn.cluster import DBSCAN
+    _HAVE_SKLEARN_DBSCAN = True
+except ImportError:
+    DBSCAN = None
+    _HAVE_SKLEARN_DBSCAN = False
+
+
+def dbscan_labels(data, eps=100, min_samples=3):
+    data = np.asarray(data, dtype=float)
+    n_samples = len(data)
+    if n_samples == 0:
+        return np.array([], dtype=int)
+
+    dist_matrix = np.linalg.norm(data[:, None, :] - data[None, :, :], axis=2)
+    labels = np.full(n_samples, -1, dtype=int)
+    visited = np.zeros(n_samples, dtype=bool)
+    cluster_id = 0
+
+    for i in range(n_samples):
+        if visited[i]:
+            continue
+        visited[i] = True
+        neighbors = np.where(dist_matrix[i] <= eps)[0]
+        if len(neighbors) < min_samples:
+            labels[i] = -1
+            continue
+
+        labels[i] = cluster_id
+        seeds = [n for n in neighbors if n != i]
+
+        while seeds:
+            j = seeds.pop()
+            if not visited[j]:
+                visited[j] = True
+                j_neighbors = np.where(dist_matrix[j] <= eps)[0]
+                if len(j_neighbors) >= min_samples:
+                    for neighbor in j_neighbors:
+                        if neighbor not in seeds and labels[neighbor] == -1:
+                            seeds.append(neighbor)
+            if labels[j] == -1:
+                labels[j] = cluster_id
+
+        cluster_id += 1
+
+    return labels
+
 
 def build_clustering_feature_matrix_final():
     print("--- Starting Feature Engineering (Consensus Mode) ---")
