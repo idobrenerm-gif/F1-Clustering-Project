@@ -1,0 +1,13 @@
+Feature_Name,Minimum,Maximum,Mean (Average),Median,Variance
+entry_speed,64.0,335.0,199.7502,203.0,4348.4204
+apex_speed,50.0,320.0,162.8539,152.0,4779.5581
+exit_speed,52.0,320.0,179.7773,179.0,4883.9458
+speed_drop,0.0,178.0,36.8963,27.0,1467.3439
+braking_pct_before_apex,0.0,1.0,0.3717,0.4245,0.1122
+trail_braking_pct,0.0,1.0,0.3303,0.3062,0.108
+throttle_app_pct_after_apex,0.0,1.0,0.7615,1.0,0.1244
+coasting_pct,0.0,0.815,0.096,0.0,0.0184
+braking_time_pct,0.0,1.0,0.2614,0.25,0.0662
+average_throttle,0.0,100.0,47.3506,40.6154,1198.2503
+min_gear,2.0,8.0,4.3607,4.0,2.7687
+average_speed,60.3077,321.5714,178.9551,176.0,4389.51

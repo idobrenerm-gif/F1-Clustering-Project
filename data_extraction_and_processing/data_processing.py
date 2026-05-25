@@ -1,100 +1,89 @@
 import pandas as pd
 import os
 
-def process_golden_laps(tracks):
-    # Create output folder if it doesn't exist
-    os.makedirs("processed_data", exist_ok=True)
-    all_golden_data = [] 
+def generate_pure_fastest_laps():
+    print("מתחיל בעיבוד הנתונים ליצירת קובץ הזהב (כולל זמן הקפה)...")
     
-    for track_name in tracks:
-        print(f"Processing data for {track_name}...")
+    raw_data_dir = 'raw_data'
+    processed_data_dir = 'processed_data'
+    output_file = os.path.join(processed_data_dir, 'pure_fastest_laps_telemetry.csv')
+    
+    os.makedirs(processed_data_dir, exist_ok=True)
+    
+    tracks = ['Monza', 'Singapore', 'Spa', 'Suzuka']
+    all_pure_data = []
+    
+    for track in tracks:
+        print(f"מעבד את מסלול: {track}...")
         
-        # Define file paths
-        laps_file = f"raw_data_2/{track_name}_raw_laps.csv"
-        tel_file = f"raw_data_2/{track_name}_raw_telemetry.csv"
-        loc_file = f"raw_data_2/{track_name}_raw_location.csv"
-
-        print(f"  Loading files for {track_name}...")
-        # Load CSV files into DataFrames
-        laps_df = pd.read_csv(laps_file)
-        tel_df = pd.read_csv(tel_file)
-        loc_df = pd.read_csv(loc_file)
+        # טעינת הקבצים
+        laps_df = pd.read_csv(os.path.join(raw_data_dir, f'{track}_raw_laps.csv'))
+        loc_df = pd.read_csv(os.path.join(raw_data_dir, f'{track}_raw_location.csv'))
+        tel_df = pd.read_csv(os.path.join(raw_data_dir, f'{track}_raw_telemetry.csv'))
         
-        print(f"  Converting and syncing timezones...")
-        # Convert dates to standard timezone-aware format
-        laps_df['date_start'] = pd.to_datetime(laps_df['date_start'], utc=True, format='mixed')
-        tel_df['date'] = pd.to_datetime(tel_df['date'], utc=True, format='mixed')
-        loc_df['date'] = pd.to_datetime(loc_df['date'], utc=True, format='mixed')
+        # המרת זמנים מותאמת (ISO8601) למניעת קריסות מילישניות
+        laps_df['date_start'] = pd.to_datetime(laps_df['date_start'], format='ISO8601')
+        loc_df['date'] = pd.to_datetime(loc_df['date'], format='ISO8601')
+        tel_df['date'] = pd.to_datetime(tel_df['date'], format='ISO8601')
         
-        print(f"  Calculating lap times and merging...")
-        # Calculate end time of the lap if missing
-        if 'date_end' not in laps_df.columns:
-            laps_df['date_end'] = laps_df['date_start'] + pd.to_timedelta(laps_df['lap_duration'], unit='s')
-        else:
-            laps_df['date_end'] = pd.to_datetime(laps_df['date_end'], utc=True, format='mixed')      
-       
-        # Keep only laps with a valid duration
-        valid_laps = laps_df.dropna(subset=['lap_duration'])
-        if valid_laps.empty:
-            continue
+        # 1. ניקוי הקפות Pit-Out
+        valid_laps = laps_df[~laps_df['is_pit_out_lap'].isin([True, 'True', 'true', 1])].copy()
+        
+        # 2. זיהוי וניקוי הקפות Pit-In 
+        laps_df['next_lap_is_pit_out'] = laps_df.groupby('driver_number')['is_pit_out_lap'].shift(-1)
+        pit_in_mask = laps_df['next_lap_is_pit_out'].isin([True, 'True', 'true', 1]) | laps_df['lap_duration'].isna()
+        
+        # שילוב הסינונים
+        valid_laps = valid_laps[~valid_laps.index.isin(laps_df[pit_in_mask].index)]
+        
+        # 3. בחירת ההקפה המהירה ביותר (Pure Lap) לכל נהג
+        fastest_laps_indices = valid_laps.groupby('driver_number')['lap_duration'].idxmin()
+        fastest_laps = valid_laps.loc[fastest_laps_indices]
+        
+        # מיזוג נתוני הטלמטריה וה-GPS עבור ההקפות הטהורות שנבחרו
+        for _, lap in fastest_laps.iterrows():
+            driver = lap['driver_number']
             
-        # Find the fastest lap for each driver
-        best_lap_indices = valid_laps.groupby('driver_number')['lap_duration'].idxmin()
-        golden_laps = valid_laps.loc[best_lap_indices]
-        
-        for _, row in golden_laps.iterrows():
-            driver = row['driver_number']
-            t_start = row['date_start']
-            t_end = row['date_end']
+            start_time = lap['date_start']
+            end_time = start_time + pd.to_timedelta(lap['lap_duration'], unit='s')
             
-            # Filter telemetry data for this specific lap
-            driver_tel = tel_df[(tel_df['driver_number'] == driver) & 
-                                (tel_df['date'] >= t_start) & 
-                                (tel_df['date'] <= t_end)].sort_values('date')
-                                
-            # Filter location data for this specific lap
+            # סינון הדאטה לחלון הזמן הרלוונטי וסידור לפי זמן
             driver_loc = loc_df[(loc_df['driver_number'] == driver) & 
-                                (loc_df['date'] >= t_start) & 
-                                (loc_df['date'] <= t_end)].sort_values('date')
+                                (loc_df['date'] >= start_time) & 
+                                (loc_df['date'] <= end_time)].sort_values('date')
+                                
+            driver_tel = tel_df[(tel_df['driver_number'] == driver) & 
+                                (tel_df['date'] >= start_time) & 
+                                (tel_df['date'] <= end_time)].sort_values('date')
             
-            if not driver_tel.empty and not driver_loc.empty:
-                # Merge telemetry and location by closest timestamp
-                merged_lap = pd.merge_asof(
-                    left=driver_tel, 
-                    right=driver_loc[['date', 'x', 'y', 'z']], 
-                    on='date', 
-                    direction='nearest', 
-                    tolerance=pd.Timedelta(milliseconds=300)
-                )
+            if driver_loc.empty or driver_tel.empty:
+                continue
                 
-                # Remove rows with missing coordinates
-                merged_lap = merged_lap.dropna(subset=['x', 'y'])
-                
-                # Add track name and lap time
-                merged_lap['Track'] = track_name
-                merged_lap['Lap_Time'] = row['lap_duration']
-                
-                # Save the processed data
-                all_golden_data.append(merged_lap)
-                
-    if not all_golden_data:
-        print("No data was processed. Check your raw_data folder.")
+            # מיזוג לפי הזמן הקרוב ביותר
+            merged_lap = pd.merge_asof(driver_tel, driver_loc[['date', 'x', 'y']], 
+                                       on='date', direction='nearest')
+            
+            merged_lap['Track'] = track
+            
+            # -- השינוי מתבצע כאן --
+            # הוספת זמן ההקפה (בשורות) לפני השמירה
+            merged_lap['lap_duration'] = lap['lap_duration']
+            
+            # שמירת העמודות הרלוונטיות (הוספנו את lap_duration לרשימה)
+            final_columns = ['Track', 'driver_number', 'lap_duration', 'x', 'y', 'speed', 'brake', 'throttle', 'n_gear']
+            merged_lap = merged_lap[final_columns]
+            
+            all_pure_data.append(merged_lap)
+            
+    # שמירת הקובץ הסופי
+    if all_pure_data:
+        final_df = pd.concat(all_pure_data, ignore_index=True)
+        final_df.to_csv(output_file, index=False)
+        print(f"העיבוד הסתיים בהצלחה! הקובץ נשמר בנתיב: {output_file}")
+        return final_df
+    else:
+        print("לא נמצאו נתונים תקינים למיזוג.")
         return None
-        
-    # Combine all processed laps into one DataFrame
-    final_dataset = pd.concat(all_golden_data, ignore_index=True)
-    
-    # Reorder columns to a clean format
-    cols_order = ['Track', 'driver_number', 'Lap_Time', 'date', 'x', 'y', 'speed', 'throttle', 'brake', 'n_gear']
-    cols_order = [c for c in cols_order if c in final_dataset.columns]
-    final_dataset = final_dataset[cols_order]
-    
-    # Save the final dataset to a CSV file
-    output_path = "processed_data/golden_laps_final.csv"
-    final_dataset.to_csv(output_path, index=False)
-    print(f"\nSuccess! Processed data saved to {output_path} with {len(final_dataset)} rows.")
-    return final_dataset
 
-# List of tracks to process
-tracks_to_process = ['Monza', 'Spa', 'Singapore', 'Suzuka']
-process_golden_laps(tracks_to_process)
+
+generate_pure_fastest_laps()
