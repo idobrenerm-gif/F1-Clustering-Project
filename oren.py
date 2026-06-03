@@ -74,8 +74,8 @@ def plot_correlation_heatmap(data):
     plt.show()
 
 # Execute visualizations
-plot_distributions(df)
-plot_category_differences(df)
-plot_trends_and_patterns(df)
+#plot_distributions(df)
+#plot_category_differences(df)
+#plot_trends_and_patterns(df)
 plot_relationships(df)
-plot_correlation_heatmap(df)
+#plot_correlation_heatmap(df)
