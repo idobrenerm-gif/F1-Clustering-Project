@@ -1,0 +1,77 @@
+import pandas as pd
+import os
+
+def calculate_feature_statistics():
+    print("--- Calculating Feature Statistics ---")
+    
+    # נתיב לקובץ הפיצ'רים הסופי (קריאה בלבד!)
+    input_file = 'processed_data/Qualifying_final_clustering_matrix.csv'
+    
+    # תיקיית היעד והקובץ החדש שייווצר
+    output_dir = 'Driver Performance Metrics'
+    output_file = os.path.join(output_dir, 'Feature_Statistics_Summary.csv')
+    
+    # יצירת התיקייה החדשה אם היא לא קיימת
+    os.makedirs(output_dir, exist_ok=True)
+    
+    try:
+        df = pd.read_csv(input_file)
+        print(f"  [OK] Loaded dataset with {len(df)} rows.")
+    except FileNotFoundError:
+        print(f"  [!] Error: Could not find '{input_file}'.")
+        return
+
+    # רשימת העמודות הנומריות המעודכנת שלך (ללא עמודות מזהים)
+    features_to_analyze = [
+        'entry_speed', 
+        'apex_speed', 
+        'exit_speed', 
+        'speed_drop',
+        'braking_pct_before_apex', 
+        'trail_braking_pct', 
+        'throttle_app_pct_after_apex', 
+        'coasting_pct', 
+        'braking_time_pct', 
+        'average_throttle', 
+        'min_gear', 
+        'average_speed'
+    ]
+    
+    # וידוא שהעמודות קיימות בקובץ למניעת שגיאות
+    missing_cols = [col for col in features_to_analyze if col not in df.columns]
+    if missing_cols:
+         print(f"  [!] Warning: Missing columns {missing_cols}. They will be skipped.")
+         features_to_analyze = [col for col in features_to_analyze if col in df.columns]
+
+    print("  -> Calculating Min, Max, Mean, Median, and Variance...")
+    
+    # חישוב הסטטיסטיקות
+    stats_list = []
+    
+    for feature in features_to_analyze:
+        # שימוש ב-dropna כדי למנוע שגיאות חישוב במקרה נדיר של תא ריק
+        feature_data = df[feature].dropna() 
+        
+        stats_list.append({
+            'Feature_Name': feature,
+            'Minimum': round(feature_data.min(), 4),
+            'Maximum': round(feature_data.max(), 4),
+            'Mean (Average)': round(feature_data.mean(), 4),
+            'Median': round(feature_data.median(), 4),
+            'Variance': round(feature_data.var(), 4)
+        })
+        
+    # יצירת Dataframe מהתוצאות
+    stats_df = pd.DataFrame(stats_list)
+    
+    # שמירה לקובץ החדש (לא דורס את קובץ המקור!)
+    stats_df.to_csv(output_file, index=False)
+    
+    print(f"\n--- Process Complete ---")
+    print(f"  [SUCCESS] Statistical summary safely saved to: {output_file}")
+    
+    # הדפסה קצרה למסך כדי שתראה את התוצאות מיד
+    print("\n  Preview of Statistics:")
+    print(stats_df.to_string(index=False))
+
+#calculate_feature_statistics()
