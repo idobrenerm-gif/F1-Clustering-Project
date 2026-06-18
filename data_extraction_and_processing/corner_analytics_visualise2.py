@@ -5,7 +5,7 @@ import os
 
 def load_data():
     """Load the golden laps dataset."""
-    file_path = "processed_data/golden_laps_final.csv"
+    file_path = "archive/golden_laps_final.csv"
     if not os.path.exists(file_path):
         # Fallback in case the script is run from inside the processed_data folder
         file_path = "golden_laps_final.csv"

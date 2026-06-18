@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 
-def load_and_prepare_data(file_path="processed_data/golden_laps_final.csv"):
+def load_and_prepare_data(file_path="archive/golden_laps_final.csv"):
     """Load the dataset and ensure correct data types."""
     if not os.path.exists(file_path):
         # Fallback to current directory if not in processed_data folder
