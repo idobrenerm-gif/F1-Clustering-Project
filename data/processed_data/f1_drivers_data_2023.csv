@@ -1,5 +1,5 @@
 ﻿driver_number,name,team,age_in_2023,years_of_experience,years_in_current_team,country,marital_status,has_kids,world_championships,height_cm,weight_kg,driver_status,contract_years_remaining
-1,Max Verstappen,Red Bull Racing,26,9,8,Netherlands,in a Relationship,False,2,181,72,1,5
+1,Max Verstappen,Red Bull Racing,26,9,8,Netherlands,In a Relationship,False,2,181,72,1,5
 11,Sergio Perez,Red Bull Racing,33,13,3,Mexico,Married,True,0,173,63,2,2
 44,Lewis Hamilton,Mercedes,38,17,11,United Kingdom,Single,False,7,174,73,1,0
 63,George Russell,Mercedes,25,5,2,United Kingdom,In a Relationship,False,0,185,70,2,2
