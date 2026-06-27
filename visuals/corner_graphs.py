@@ -97,7 +97,7 @@ def plot_corner_validation_map(track_name, file_path='data/processed_data/New_Qu
     ax.tick_params(colors='#333333')
     ax.grid(True, linestyle='-', alpha=0.15, color='gray')
     
-    margin = 500
+    margin = 5000
     ax.set_xlim(x.min() - margin, x.max() + margin)
     ax.set_ylim(y.min() - margin, y.max() + margin)
 
@@ -113,7 +113,7 @@ def plot_corner_validation_map(track_name, file_path='data/processed_data/New_Qu
     plt.show()
 
 # Run the validation
-plot_corner_validation_map('Monza')
+#plot_corner_validation_map('Monza')
 plot_corner_validation_map('Singapore')
-plot_corner_validation_map('Spa')
-plot_corner_validation_map('Suzuka')
+#plot_corner_validation_map('Spa')
+#plot_corner_validation_map('Suzuka')
