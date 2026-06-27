@@ -110,6 +110,7 @@ def plot_corner_validation_map(track_name, file_path='data/processed_data/New_Qu
               fontsize=14, facecolor='white', edgecolor='#CCCCCC', labelcolor='#333333')
 
     plt.tight_layout(pad=2.5)
+    plt.savefig('corner_validation_map.png', dpi=300, bbox_inches='tight')
     plt.show()
 
 # Run the validation
