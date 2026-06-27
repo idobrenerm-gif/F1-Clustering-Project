@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-def plot_f1_track(track_name, file_path='processed_data/golden_laps_final.csv'):
+def plot_f1_track(track_name, file_path='data/processed_data/New_Qualifying_fastest_laps_telemetry_with_corners.csv'):
     
     absolute_path = os.path.abspath(file_path)
     print(f"\n[DEBUG] Loading file from: {absolute_path}")
@@ -73,6 +73,6 @@ def plot_f1_track(track_name, file_path='processed_data/golden_laps_final.csv'):
 
 # print the track layout for each track
 plot_f1_track('Monza')
-#plot_f1_track('Singapore')
+plot_f1_track('Singapore')
 plot_f1_track('Spa')
-#plot_f1_track('Suzuka')
+plot_f1_track('Suzuka')
