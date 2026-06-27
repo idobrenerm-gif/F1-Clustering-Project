@@ -5,7 +5,7 @@ from archive.access_to_api import OpenF1Client
 def plot_racing_lines_robust():
     print("Loading corner data...")
     api = OpenF1Client()
-    df_corners = pd.read_csv("F1_4_Races_All_Corners.csv")
+    df_corners = pd.read_csv("../archive/F1_4_Races_All_Corners.csv")
     df_corners['start_time'] = pd.to_datetime(df_corners['start_time'], format='ISO8601')
 
     # אנחנו מתמקדים במרוץ אחד (למשל 9558 - סילברסטון) כדי לחסוך קריאות API

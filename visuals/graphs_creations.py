@@ -7,7 +7,7 @@ import os
 # need fixing to corner plot and add in legend
 
 # Function to plot the F1 track layout by speed for a given track name, works similar to the previous function but with a continuous color gradient based on speed
-def plot_speed_map_continuous(track_name, file_path='processed_data/golden_laps_final.csv'):
+def plot_speed_map_continuous(track_name, file_path='../data/raw_data_qualifying/golden_laps_final.csv'):
     
     absolute_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
@@ -97,7 +97,7 @@ def plot_speed_map_continuous(track_name, file_path='processed_data/golden_laps_
 #--------------------------------------------------------------------------------------------
 
 # Function to plot braking zones by coloring track segments red when brake > 0 and gray otherwise, works similar to the previous function but with a binary color scheme based on braking status
-def plot_braking_zones(track_name, file_path='processed_data/golden_laps_final.csv'):
+def plot_braking_zones(track_name, file_path='../data/raw_data_qualifying/golden_laps_final.csv'):
     
     # 1. Load data safely
     absolute_path = os.path.abspath(file_path)
@@ -190,7 +190,7 @@ def plot_braking_zones(track_name, file_path='processed_data/golden_laps_final.c
 #plot_braking_zones('Suzuka')
 
 #--------------------------------------------------------------------------------------------
-def plot_corners_by_geometry(track_name, file_path='processed_data/golden_laps_final.csv'):
+def plot_corners_by_geometry(track_name, file_path='data/raw_data_qualifying/golden_laps_final.csv'):
     
     absolute_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
@@ -295,7 +295,7 @@ plot_corners_by_geometry('Singapore') # - 0.06 ,5 , has problem with starting po
 
 #--------------------------------------------------------------------------------------------
 
-def plot_gear_shifts(track_name, file_path='processed_data/golden_laps_final.csv'):
+def plot_gear_shifts(track_name, file_path='../data/raw_data_qualifying/golden_laps_final.csv'):
     
     absolute_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
@@ -398,7 +398,7 @@ def plot_gear_shifts(track_name, file_path='processed_data/golden_laps_final.csv
 #--------------------------------------------------------------------------------------------
 
 
-def plot_throttle_zones(track_name, file_path='processed_data/golden_laps_final.csv'):
+def plot_throttle_zones(track_name, file_path='../data/raw_data_qualifying/golden_laps_final.csv'):
     
     # 1. Load and clean data (same as before)
     absolute_path = os.path.abspath(file_path)
